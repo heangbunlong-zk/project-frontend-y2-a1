@@ -1,0 +1,44 @@
+### E-Learn API Tests
+
+### 1. Get All Courses (No Auth Required)
+GET http://localhost:3000/api/courses
+
+### 2. Register a New User
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "password123",
+  "name": "John Doe",
+  "goal": "Learn React"
+}
+
+### 3. Login User
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "password123"
+}
+
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### 4. Get Current User (Requires Token)
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### 5. Get Single Course
+GET http://localhost:3000/api/courses/1
+
+### 6. Get User Dashboard (Requires Token)
+GET http://localhost:3000/api/dashboard
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### 7. Enroll in Course (Requires Token)
+POST http://localhost:3000/api/courses/1/enroll
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{}

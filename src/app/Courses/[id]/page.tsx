@@ -1,91 +1,86 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-const coursesData = [
-  {
-    id: 1,
-    title: "C++ Basics",
-    level: "Beginner",
-    track: "Programming",
-    mentor: "Sarah Khan",
-    rating: "4.8 ★",
-    learners: "1.4k learners",
-    duration: "6 weeks",
-    lessons: "14 lessons",
-    description:
-      "Learn C++ from the ground up with simple explanations, guided coding practice, and mini projects that build real confidence.",
-    outcomes: [
-      "Understand variables, loops, conditions, and functions",
-      "Write beginner-friendly problem solving code",
-      "Practice with exercises and mini real-world tasks",
-      "Build a strong foundation for data structures",
-    ],
-    curriculum: [
-      "Getting started with C++ and your setup",
-      "Core syntax, variables, and data types",
-      "Conditions, loops, and reusable functions",
-      "Practice challenges and mini project",
-    ],
-  },
-  {
-    id: 2,
-    title: "React Development",
-    level: "Intermediate",
-    track: "Frontend",
-    mentor: "Daniel Lee",
-    rating: "4.9 ★",
-    learners: "2.1k learners",
-    duration: "8 weeks",
-    lessons: "18 lessons",
-    description:
-      "Build modern interfaces with components, hooks, state management, and project-based lessons designed for real product work.",
-    outcomes: [
-      "Create reusable components and scalable UI structure",
-      "Use hooks and state effectively in real interfaces",
-      "Connect pages, forms, and dynamic interactions",
-      "Ship polished frontend projects with confidence",
-    ],
-    curriculum: [
-      "React fundamentals and component thinking",
-      "Hooks, props, and state-driven UI",
-      "Routing, forms, and reusable patterns",
-      "Capstone project and UI polish",
-    ],
-  },
-  {
-    id: 3,
-    title: "Advanced Web Development",
-    level: "Advanced",
-    track: "Full Stack",
-    mentor: "Maya Ibrahim",
-    rating: "4.7 ★",
-    learners: "980 learners",
-    duration: "10 weeks",
-    lessons: "22 lessons",
-    description:
-      "Master advanced architecture, APIs, performance, and production-ready workflows for building scalable web applications.",
-    outcomes: [
-      "Design scalable frontend and backend structures",
-      "Work with APIs and production deployment workflows",
-      "Improve performance and maintainability of large apps",
-      "Build portfolio-ready advanced projects",
-    ],
-    curriculum: [
-      "Architecture and scalable project setup",
-      "API design, authentication, and integrations",
-      "Performance optimization and clean code patterns",
-      "Production deployment and final project review",
-    ],
-  },
-];
+type CourseDetail = {
+  id: number;
+  title: string;
+  level: string;
+  track: string;
+  mentor: string;
+  rating: string;
+  learners: string;
+  duration: string;
+  lessons: string;
+  description: string;
+  outcomes: string[];
+  curriculum: string[];
+};
 
 export default function CourseDetailPage() {
   const params = useParams();
   const router = useRouter();
-
   const courseId = Number(params.id);
-  const course = coursesData.find((c) => c.id === courseId);
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!courseId) {
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    const loadCourse = async () => {
+      try {
+        const response = await fetch(`/api/courses/${courseId}`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          if (active) {
+            setCourse(null);
+          }
+          return;
+        }
+
+        const data = (await response.json()) as { course?: CourseDetail };
+
+        if (active) {
+          setCourse(data.course ?? null);
+        }
+      } catch {
+        if (active) {
+          setCourse(null);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadCourse();
+
+    return () => {
+      active = false;
+    };
+  }, [courseId]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <h1 className="text-2xl font-bold text-slate-900">Loading course...</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Fetching the latest course details for you.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -158,9 +153,16 @@ export default function CourseDetailPage() {
             <div className="rounded-3xl border border-white/10 bg-slate-950/20 p-5 backdrop-blur-md">
               <p className="text-sm font-semibold text-cyan-100">Course overview</p>
               <div className="mt-4 space-y-3 text-sm text-slate-100">
-                <p><span className="font-semibold">Instructor:</span> {course.mentor}</p>
-                <p><span className="font-semibold">Track:</span> {course.track}</p>
-                <p><span className="font-semibold">Includes:</span> lessons, practice tasks, and certificate</p>
+                <p>
+                  <span className="font-semibold">Instructor:</span> {course.mentor}
+                </p>
+                <p>
+                  <span className="font-semibold">Track:</span> {course.track}
+                </p>
+                <p>
+                  <span className="font-semibold">Includes:</span> lessons, practice
+                  tasks, and certificate
+                </p>
               </div>
 
               <button

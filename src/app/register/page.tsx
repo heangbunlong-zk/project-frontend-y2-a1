@@ -1,8 +1,52 @@
+"use client";
+
 import Link from "next/link";
-import Navbar from "../components/Navbar";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [goal, setGoal] = useState("Frontend Developer");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, name: fullName, goal }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store token and user
+        localStorage.setItem('elearn-token', data.token);
+        localStorage.setItem('elearn-user', JSON.stringify(data.user));
+        window.dispatchEvent(new Event("elearn-auth-changed"));
+        router.push("/dashboard");
+      } else {
+        alert(data.error || 'Registration failed');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Registration failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -46,13 +90,16 @@ export default function RegisterPage() {
               </p>
             </div>
 
-            <form className="grid gap-4 md:grid-cols-2">
+            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
               <div className="md:col-span-2">
                 <label className="mb-2 block text-sm font-medium text-slate-200">Full name</label>
                 <input
                   type="text"
                   placeholder="Your full name"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
                   className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                  required
                 />
               </div>
 
@@ -61,7 +108,10 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   placeholder="student@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                  required
                 />
               </div>
 
@@ -70,13 +120,20 @@ export default function RegisterPage() {
                 <input
                   type="password"
                   placeholder="Create password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                  required
                 />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-200">Goal</label>
-                <select className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
+                <select
+                  value={goal}
+                  onChange={(event) => setGoal(event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                >
                   <option>Frontend Developer</option>
                   <option>Programming Basics</option>
                   <option>Full Stack Growth</option>
@@ -85,18 +142,25 @@ export default function RegisterPage() {
 
               <div className="md:col-span-2">
                 <label className="flex items-center gap-2 text-sm text-slate-300">
-                  <input type="checkbox" className="rounded" />
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(event) => setAcceptedTerms(event.target.checked)}
+                    className="rounded"
+                    required
+                  />
                   I agree to the platform terms and learning policy.
                 </label>
               </div>
 
               <div className="md:col-span-2">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+                <button
+                  type="submit"
+                  disabled={!acceptedTerms || isSubmitting}
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Create Account
-                </Link>
+                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                </button>
               </div>
             </form>
 

@@ -86,7 +86,7 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-6">
       <div className="mx-auto max-w-7xl">
-        <section className="overflow-hidden rounded-[32px] bg-slate-900 px-6 py-8 text-white shadow-xl">
+        <section className="overflow-hidden rounded-4xl bg-slate-900 px-6 py-8 text-white shadow-xl">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-cyan-100">

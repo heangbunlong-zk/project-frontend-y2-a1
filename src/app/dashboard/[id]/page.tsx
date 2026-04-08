@@ -1,9 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import SideBar from "../../components/SideBar";
+import { useEffect, useMemo, useState } from "react";
 import LessonViewer from "../../components/LessonViewer";
+import SideBar from "../../components/SideBar";
 
 type LessonItem = {
   id: number;
@@ -13,97 +13,71 @@ type LessonItem = {
   summary: string;
 };
 
-const courseTitles: Record<string, string> = {
-  "1": "C++ Basics",
-  "2": "React Development",
-  "3": "Advanced Web Development",
-};
-
-const lessonsByCourse: Record<string, LessonItem[]> = {
-  "1": [
-    {
-      id: 1,
-      title: "Introduction",
-      duration: "6 min",
-      completed: true,
-      summary: "Understand the course structure and set up your first C++ environment.",
-    },
-    {
-      id: 2,
-      title: "Variables",
-      duration: "10 min",
-      completed: true,
-      summary: "Learn how variables work and how to store values in clean, readable code.",
-    },
-    {
-      id: 3,
-      title: "Loops",
-      duration: "12 min",
-      completed: false,
-      summary: "Practice repeating tasks efficiently with loops and simple exercises.",
-    },
-  ],
-  "2": [
-    {
-      id: 1,
-      title: "React Overview",
-      duration: "8 min",
-      completed: true,
-      summary: "See how React powers component-driven interfaces and reusable UI patterns.",
-    },
-    {
-      id: 2,
-      title: "Props & State",
-      duration: "14 min",
-      completed: false,
-      summary: "Use props and state to create dynamic, interactive components.",
-    },
-    {
-      id: 3,
-      title: "Hooks Practice",
-      duration: "16 min",
-      completed: false,
-      summary: "Apply hooks to manage state and side effects in realistic frontend examples.",
-    },
-  ],
-  "3": [
-    {
-      id: 1,
-      title: "Architecture Review",
-      duration: "11 min",
-      completed: true,
-      summary: "Review scalable project architecture and modern web engineering decisions.",
-    },
-    {
-      id: 2,
-      title: "API Integration",
-      duration: "15 min",
-      completed: false,
-      summary: "Connect your app with APIs and understand robust data-flow patterns.",
-    },
-    {
-      id: 3,
-      title: "Deployment Strategy",
-      duration: "13 min",
-      completed: false,
-      summary: "Prepare your app for production with deployment and optimization best practices.",
-    },
-  ],
+const fallbackLesson: LessonItem = {
+  id: 1,
+  title: "Introduction",
+  duration: "5 min",
+  completed: false,
+  summary: "Loading the lesson content for your selected course.",
 };
 
 export default function LearningPage() {
   const params = useParams();
-  const courseId = (params?.id as string) || "1";
-  const courseTitle = courseTitles[courseId] || `Course ${courseId}`;
+  const courseId = Number((params?.id as string) || "1");
+  const [courseTitle, setCourseTitle] = useState("Learning Path");
+  const [lessons, setLessons] = useState<LessonItem[]>([fallbackLesson]);
+  const [currentLessonId, setCurrentLessonId] = useState<number>(fallbackLesson.id);
+  const [loading, setLoading] = useState(true);
 
-  const lessons = useMemo(() => {
-    return lessonsByCourse[courseId as keyof typeof lessonsByCourse] || lessonsByCourse["1"];
+  useEffect(() => {
+    let active = true;
+
+    const loadCourse = async () => {
+      try {
+        const response = await fetch(`/api/courses/${courseId}`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load course lessons");
+        }
+
+        const data = (await response.json()) as {
+          course?: { title?: string; lessonItems?: LessonItem[] };
+        };
+
+        const nextLessons = data.course?.lessonItems?.length
+          ? data.course.lessonItems
+          : [fallbackLesson];
+
+        if (active) {
+          setCourseTitle(data.course?.title || `Course ${courseId}`);
+          setLessons(nextLessons);
+          setCurrentLessonId(nextLessons[0].id);
+        }
+      } catch {
+        if (active) {
+          setCourseTitle(`Course ${courseId}`);
+          setLessons([fallbackLesson]);
+          setCurrentLessonId(fallbackLesson.id);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadCourse();
+
+    return () => {
+      active = false;
+    };
   }, [courseId]);
 
-  const [currentLessonId, setCurrentLessonId] = useState<number>(lessons[0].id);
-
-  const currentLesson =
-    lessons.find((lesson) => lesson.id === currentLessonId) || lessons[0];
+  const currentLesson = useMemo(() => {
+    return lessons.find((lesson) => lesson.id === currentLessonId) || lessons[0];
+  }, [currentLessonId, lessons]);
 
   const completedCount = lessons.filter((lesson) => lesson.completed).length;
   const progress = Math.round((completedCount / lessons.length) * 100);
@@ -124,7 +98,9 @@ export default function LearningPage() {
                 <p className="text-sm font-semibold text-indigo-600">Learning classroom</p>
                 <h1 className="mt-1 text-3xl font-bold text-slate-900">{courseTitle}</h1>
                 <p className="mt-2 text-sm text-slate-500">
-                  Continue your lessons and complete the next milestone in your learning path.
+                  {loading
+                    ? "Loading your latest lesson data..."
+                    : "Continue your lessons and complete the next milestone in your learning path."}
                 </p>
               </div>
 

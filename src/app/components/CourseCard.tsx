@@ -60,7 +60,7 @@ export default function CourseCard({
       <div
         className={`relative h-48 overflow-hidden bg-linear-to-br ${theme.banner} p-4`}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.28),_transparent_30%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_30%)]" />
         <div className="absolute -right-6 top-4 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
 
         <div className="absolute left-4 top-4 flex flex-wrap gap-2">
@@ -134,7 +134,7 @@ export default function CourseCard({
 
         <button
           onClick={() => router.push(id ? `/Courses/${id}` : "/Courses")}
-          className="mt-5 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-indigo-600"
+          className="mt-5 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-indigo-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           {ctaLabel || "Explore Course"}
         </button>

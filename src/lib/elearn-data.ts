@@ -279,6 +279,8 @@ export function getCourseById(id: number): Course | undefined {
   return courses.find((course) => course.id === id);
 }
 
+export { courses };
+
 export function getDashboardData(userName = "Student") {
   const myCourses = courses
     .filter((course) => course.dashboard)

@@ -1,8 +1,56 @@
+"use client";
+
 import Link from "next/link";
-import Navbar from "../components/Navbar";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
+
+function formatDemoName(email: string) {
+  const baseName = email.split("@")[0] || "Student";
+  return baseName
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store token and user
+        localStorage.setItem('elearn-token', data.token);
+        localStorage.setItem('elearn-user', JSON.stringify(data.user));
+        window.dispatchEvent(new Event("elearn-auth-changed"));
+        router.push("/dashboard");
+      } else {
+        alert(data.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Login failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -48,13 +96,16 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">Email</label>
                 <input
                   type="email"
                   placeholder="student@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500"
+                  required
                 />
               </div>
 
@@ -63,7 +114,10 @@ export default function LoginPage() {
                 <input
                   type="password"
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500"
+                  required
                 />
               </div>
 
@@ -75,12 +129,12 @@ export default function LoginPage() {
                 <span className="font-medium text-indigo-600">Forgot password?</span>
               </div>
 
-              <Link
-                href="/dashboard"
+              <button
+                type="submit"
                 className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-600"
               >
-                Sign In
-              </Link>
+                {isSubmitting ? "Signing in..." : "Sign In"}
+              </button>
             </form>
 
             <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
