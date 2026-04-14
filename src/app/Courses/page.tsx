@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import CourseCard from "../components/CourseCard";
 
+// heroooo
 type CourseSummary = {
   id: number;
   title: string;
